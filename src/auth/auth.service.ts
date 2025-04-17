@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto, LoginDto } from './dto/auth-dto';
+import { UpdateProfileDto } from './dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -103,5 +104,21 @@ async getProfile(userId: string) {
   
     return user;
   }
+
+  async updateProfile(userId: string, data: UpdateProfileDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  
+    if (!user) {
+      throw new NotFoundException('Foydalanuvchi topilmadi');
+    }
+  
+    await this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  
+    return { message: 'Profil muvaffaqiyatli yangilandi' };
+  }
+  
   
 }

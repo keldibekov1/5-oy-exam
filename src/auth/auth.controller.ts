@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, VerifyOtpDto } from './dto/auth-dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { JwtAuthGuard } from 'src/jwt-auth-guard/jwt-auth-guard.guard';
+import { UpdateProfileDto } from './dto/update-auth.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -46,5 +47,14 @@ export class AuthController {
   @Get('/me')
   async getProfile(@Request() req) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/me')
+  @ApiOperation({ summary: 'Foydalanuvchi profilini yangilash' })
+  @ApiResponse({ status: 200, description: 'Profil yangilandi' })
+  @ApiResponse({ status: 404, description: 'Foydalanuvchi topilmadi' })
+  async updateProfile(@Request() req, @Body() data: UpdateProfileDto) {
+    return this.authService.updateProfile(req.user.id, data);
   }
 }

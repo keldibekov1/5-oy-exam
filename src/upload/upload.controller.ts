@@ -30,7 +30,9 @@ import {
     @Post()
     @UseInterceptors(FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        // destination: '../../uploads',
+        destination: path.join(__dirname, '../../uploads'),
+
         filename(req, file, cb) {
           const fileName = `${Date.now()}${path.extname(file.originalname)}`;
           cb(null, fileName);
