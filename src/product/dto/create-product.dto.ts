@@ -44,10 +44,6 @@ export class CreateProductDto {
     @ApiProperty({ description: 'Mahsulot kategoriyasi IDsi', example: 'f8f9a0' })
     @IsString()
     categoryId: string;
-  
-    @ApiProperty({ description: 'Mahsulotni kim qo\'shganligini ko\'rsatadigan foydalanuvchi IDsi', example: 'user123' })
-    @IsString()
-    userId: string;
 
     @ApiProperty({description: 'suplier name', example: 'Samsung Company'})
     @IsString()

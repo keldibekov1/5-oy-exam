@@ -8,7 +8,7 @@ import { TransactionType } from '@prisma/client';
 export class TransactionService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateTransactionDto) {
+  async create(dto: CreateTransactionDto, adminId: string) {
     const variant = await this.prisma.variant.findUnique({
       where: { id: dto.variantId },
     });
@@ -20,24 +20,22 @@ export class TransactionService {
     const amount = dto.unitPrice * dto.quantity;
     const profit = (dto.unitPrice - variant.purchasePrice) * dto.quantity;
 
-    // Variant stockdan tushir
     await this.prisma.variant.update({
       where: { id: dto.variantId },
       data: { stock: { decrement: dto.quantity } },
     });
 
-    // Tranzaktsiyani yarat
     const transaction = await this.prisma.transaction.create({
       data: {
         type: dto.type,
         productId: dto.productId,
         customerId: dto.customerId,
-        adminId: dto.adminId,
+        adminId, 
         variantId: dto.variantId,
         amount,
         profit,
-        unitPrice: dto.unitPrice, // ← YANGI
-        quantity: dto.quantity,   // ← YANGI
+        unitPrice: dto.unitPrice,
+        quantity: dto.quantity,  
       },
     });
 

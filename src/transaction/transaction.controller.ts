@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/jwt-auth-guard/jwt-auth-guard.guard';
 
 @ApiTags('Transactions')
 @Controller('transactions')
@@ -12,8 +13,10 @@ export class TransactionController {
   @Post()
   @ApiOperation({ summary: 'Yangi tranzaksiya (sotish)' })
   @ApiResponse({ status: 201, description: 'Tranzaksiya yaratildi' })
-  create(@Body() dto: CreateTransactionDto) {
-    return this.service.create(dto);
+  @UseGuards(JwtAuthGuard) 
+  async create(@Body() dto: CreateTransactionDto, @Req() req: any) {
+    const adminId = req.user.id; 
+    return this.service.create(dto, adminId); 
   }
 
   @Get()

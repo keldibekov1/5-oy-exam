@@ -7,9 +7,8 @@ import { TransactionType } from '@prisma/client';
 export class ExchangeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async exchangeProduct(dto: ExchangeDto) {
+  async exchangeProduct(dto: ExchangeDto, userId: string) {
     const {
-      adminId,
       customerId,
       oldPrice,
       unitPrice,
@@ -26,7 +25,8 @@ export class ExchangeService {
       const newProduct = await tx.product.create({
         data: {
           ...oldProduct,
-          stock: 1,  
+          stock: 1,
+          userId, 
           variants: {
             create: oldProduct.variants.map((variant) => ({
               colorId: variant.colorId,
@@ -41,14 +41,14 @@ export class ExchangeService {
       const transaction = await tx.transaction.create({
         data: {
           productId,
-          variantId, 
+          variantId,
           customerId,
-          adminId,
+          adminId: userId, 
           type: TransactionType.SALE,
           amount: unitPrice,
           quantity: 1,
           unitPrice,
-          profit: unitPrice - oldPrice, 
+          profit: unitPrice - oldPrice,
         },
       });
 
@@ -56,7 +56,7 @@ export class ExchangeService {
         where: { id: variantId },
         data: {
           stock: {
-            decrement: 1,  
+            decrement: 1,
           },
         },
       });
@@ -70,7 +70,7 @@ export class ExchangeService {
           productId,
           variantId,
           customerId,
-          adminId,
+          adminId: userId,
           description: 'Telefonni almashish',
         },
       });
@@ -98,10 +98,10 @@ export class ExchangeService {
           variant: true,
           customer: true,
           admin: true,
-          oldProduct: {  
+          oldProduct: {
             include: {
-              category: true, 
-              variants: true, 
+              category: true,
+              variants: true,
             },
           },
         },
@@ -109,15 +109,15 @@ export class ExchangeService {
       this.prisma.exchange.count(),
     ]);
 
-    const exchangesWithOldProduct = data.map(exchange => ({
+    const exchangesWithOldProduct = data.map((exchange) => ({
       ...exchange,
       oldProductName: exchange.oldProduct.name,
       oldProductModel: exchange.oldProduct.model,
       oldProductCategory: exchange.oldProduct.category.name,
-      oldProductVariants: exchange.oldProduct.variants.map(variant => ({
+      oldProductVariants: exchange.oldProduct.variants.map((variant) => ({
         color: variant.colorId,
-        storage: variant.storage, 
-        stock: variant.stock, 
+        storage: variant.storage,
+        stock: variant.stock,
       })),
     }));
 
@@ -128,7 +128,6 @@ export class ExchangeService {
       lastPage: Math.ceil(total / limit),
     };
   }
-  
 
   async getExchange(exchangeId: string) {
     const exchange = await this.prisma.exchange.findUnique({
@@ -142,13 +141,11 @@ export class ExchangeService {
     });
 
     if (!exchange) {
-      throw new Error('Exchange ma\'lumoti topilmadi');
+      throw new Error("Exchange ma'lumoti topilmadi");
     }
 
     return exchange;
   }
-
- 
 
   async deleteExchange(exchangeId: string) {
     const exchange = await this.prisma.exchange.findUnique({
@@ -156,7 +153,7 @@ export class ExchangeService {
     });
 
     if (!exchange) {
-      throw new Error('Exchange ma\'lumoti topilmadi');
+      throw new Error("Exchange ma'lumoti topilmadi");
     }
 
     return this.prisma.exchange.delete({

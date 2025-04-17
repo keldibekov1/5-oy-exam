@@ -7,18 +7,19 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
-    const totalStock = createProductDto.variants.reduce((sum, v) => sum + v.stock, 0);
+  async create(dto: CreateProductDto, userId: string) {
+    const totalStock = dto.variants.reduce((sum, v) => sum + v.stock, 0);
   
     return this.prisma.product.create({
       data: {
-        name: createProductDto.name,
-        model: createProductDto.model,
-        categoryId: createProductDto.categoryId,
-        userId: createProductDto.userId,
+        name: dto.name,
+        model: dto.model,
+        categoryId: dto.categoryId,
+        supplier: dto.supplier,
         stock: totalStock,
+        userId,
         variants: {
-          create: createProductDto.variants.map(v => ({
+          create: dto.variants.map(v => ({
             colorId: v.colorId,
             storage: v.storage,
             stock: v.stock,
@@ -26,7 +27,7 @@ export class ProductService {
           })),
         },
       },
-      include: { 
+      include: {
         variants: {
           include: {
             color: true,
@@ -37,6 +38,7 @@ export class ProductService {
     });
   }
   
+
 
   async findAll(query: {
     page?: string;
@@ -116,7 +118,7 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, updateProductDto: CreateProductDto) {
+  async update(id: string, updateProductDto: CreateProductDto, userId: string) {
     const totalStock = updateProductDto.variants.reduce((sum, v) => sum + v.stock, 0);
   
     return this.prisma.product.update({
@@ -125,11 +127,11 @@ export class ProductService {
         name: updateProductDto.name,
         model: updateProductDto.model,
         categoryId: updateProductDto.categoryId,
-        userId: updateProductDto.userId,
         supplier: updateProductDto.supplier,
         stock: totalStock,
+        userId, 
         variants: {
-          deleteMany: {}, 
+          deleteMany: {},
           create: updateProductDto.variants.map(v => ({
             colorId: v.colorId,
             storage: v.storage,
@@ -149,14 +151,33 @@ export class ProductService {
     });
   }
   
+  
 
- async remove(id: string) {
-  const product = await this.prisma.product.findUnique({ where: { id } });
-  if (!product) throw new NotFoundException('Mahsulot topilmadi');
-
-  await this.prisma.variant.deleteMany({ where: { productId: id } });
-
-  return this.prisma.product.delete({ where: { id } });
-}
+  async remove(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },  
+    });
+    if (!product) throw new NotFoundException('Mahsulot topilmadi');
+  
+    const variantIds = product.variants.map(variant => variant.id);
+  
+    await this.prisma.transaction.deleteMany({
+      where: { variantId: { in: variantIds } },
+    });
+  
+    await this.prisma.variant.deleteMany({
+      where: { productId: id },
+    });
+  
+    await this.prisma.exchange.deleteMany({
+      where: { oldProductId: id },
+    });
+  
+    return this.prisma.product.delete({
+      where: { id },
+    });
+  }
+  
 
 }

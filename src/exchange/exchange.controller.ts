@@ -1,12 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  Get,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Delete, Query, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { ExchangeService } from './exchange.service';
 import { ExchangeDto } from './dto/create-exchange.dto';
 import {
@@ -16,6 +9,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/jwt-auth-guard/jwt-auth-guard.guard';
 
 @ApiTags('Exchanges') 
 @Controller('exchanges')
@@ -23,10 +17,12 @@ export class ExchangeController {
   constructor(private readonly service: ExchangeService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard) 
   @ApiOperation({ summary: 'Mahsulotni almashtirish (exchange)' })
   @ApiResponse({ status: 201, description: 'Exchange muvaffaqiyatli yaratildi' })
-  create(@Body() dto: ExchangeDto) {
-    return this.service.exchangeProduct(dto);
+  create(@Body() dto: ExchangeDto, @Req() req: Request) {
+    const userId = (req as any).user.id; 
+    return this.service.exchangeProduct(dto, userId);
   }
 
   @Get()

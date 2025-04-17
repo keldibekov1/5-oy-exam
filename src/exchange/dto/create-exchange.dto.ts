@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { TransactionType } from '@prisma/client';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateProductDto } from 'src/product/dto/create-product.dto';
 
@@ -43,14 +48,6 @@ export class ExchangeDto {
   @IsString()
   @IsNotEmpty()
   customerId: string;
-
-  @ApiProperty({
-    example: 'e22ba883-1352-4a8c-b65b-4f1d2e46c83a',
-    description: 'Admin (sotuvchi) IDsi',
-  })
-  @IsString()
-  @IsNotEmpty()
-  adminId: string;
 
   @ApiProperty({
     description: 'Mijozdan olingan eski mahsulot haqida to‘liq maʼlumot',

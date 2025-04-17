@@ -29,7 +29,5 @@ export class CreateTransactionDto {
   @IsString()
   customerId: string;
 
-  @ApiProperty({ example: 'e22ba883-1352-4a8c-b65b-4f1d2e46c83a' })
-  @IsString()
-  adminId: string;
+  
 }

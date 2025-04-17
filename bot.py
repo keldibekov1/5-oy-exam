@@ -308,3 +308,52 @@
 
 # if __name__ == "__main__":
 #     asyncio.run(main())
+
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    WebAppInfo,
+    BotCommand,
+    MenuButtonWebApp,
+)
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+BOT_TOKEN = "7897153787:AAEqWoQCiP7z-koNuK7QOSIqNh7caZAXV_w"
+WEB_APP_URL = "https://5-oy-exam-front-gis3.vercel.app"  
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="🖥 Mini App'ni ochish",
+                web_app=WebAppInfo(url=WEB_APP_URL)
+            )
+        ]
+    ]
+    markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Mini App ochish uchun tugmani bosing:", reply_markup=markup)
+
+async def setup_bot(application: Application):
+    await application.bot.set_my_commands([
+        BotCommand("start", "Botni boshlash"),
+    ])
+
+    await application.bot.set_chat_menu_button(
+        menu_button=MenuButtonWebApp(
+            text="🚀 Mini App",
+            web_app=WebAppInfo(url=WEB_APP_URL)
+        )
+    )
+
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.post_init = setup_bot  
+
+    print("✅ Bot ishga tushdi...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()

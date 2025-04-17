@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -10,6 +21,7 @@ import {
   ApiBody,
   ApiQuery,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/jwt-auth-guard/jwt-auth-guard.guard';
 
 @ApiTags('Products')
 @Controller('products')
@@ -17,11 +29,13 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Yangi mahsulot yaratish' })
   @ApiBody({ type: CreateProductDto })
   @ApiResponse({ status: 201, description: 'Mahsulot muvaffaqiyatli yaratildi' })
-  create(@Body() dto: CreateProductDto) {
-    return this.productService.create(dto);
+  create(@Body() dto: CreateProductDto, @Request() req) {
+    const userId = req.user.id; 
+    return this.productService.create(dto, userId);
   }
 
   @Get()
@@ -47,14 +61,17 @@ export class ProductController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Mahsulotni tahrirlash' })
   @ApiParam({ name: 'id', description: 'Mahsulot IDsi' })
   @ApiBody({ type: UpdateProductDto })
   @ApiResponse({ status: 200, description: 'Mahsulot muvaffaqiyatli yangilandi' })
   @ApiResponse({ status: 404, description: 'Mahsulot topilmadi' })
-  update(@Param('id') id: string, @Body() dto: any) {
-    return this.productService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+    const userId = req.user.id; 
+    return this.productService.update(id, dto, userId);
   }
+
 
   @Delete(':id')
   @ApiOperation({ summary: 'Mahsulotni o‘chirish' })
