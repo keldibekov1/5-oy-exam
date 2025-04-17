@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { VariantUpdateDto } from 'src/product/dto/update-product.dto';
 
 @Injectable()
 export class VariantService {
@@ -32,4 +33,25 @@ export class VariantService {
       },
     });
   }
+
+  async updateVariant(
+    productId: string,
+    variantId: string,
+    variantData: VariantUpdateDto,
+  ) {
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        variants: {
+          update: {
+            where: { id: variantId },
+            data: {
+              ...variantData, 
+            },
+          },
+        },
+      },
+    });
+  }
+  
 }

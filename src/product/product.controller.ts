@@ -62,13 +62,13 @@ export class ProductController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Mahsulotni tahrirlash' })
+  @ApiOperation({ summary: 'Mahsulotni va uning variantlarini tahrirlash' })
   @ApiParam({ name: 'id', description: 'Mahsulot IDsi' })
   @ApiBody({ type: UpdateProductDto })
   @ApiResponse({ status: 200, description: 'Mahsulot muvaffaqiyatli yangilandi' })
   @ApiResponse({ status: 404, description: 'Mahsulot topilmadi' })
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
-    const userId = req.user.id; 
+  update(@Param('id') id: string, @Body() dto: UpdateProductDto, @Request() req) {
+    const userId = req.user.id;
     return this.productService.update(id, dto, userId);
   }
 

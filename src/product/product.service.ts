@@ -118,10 +118,10 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, updateProductDto: CreateProductDto, userId: string) {
-    const totalStock = updateProductDto.variants.reduce((sum, v) => sum + v.stock, 0);
+  async update(id: string, updateProductDto: UpdateProductDto, userId: string) {
+    const totalStock = updateProductDto.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
   
-    return this.prisma.product.update({
+    const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: {
         name: updateProductDto.name,
@@ -129,30 +129,57 @@ export class ProductService {
         categoryId: updateProductDto.categoryId,
         supplier: updateProductDto.supplier,
         stock: totalStock,
-        userId, 
-        variants: {
-          deleteMany: {},
-          create: updateProductDto.variants.map(v => ({
-            colorId: v.colorId,
-            storage: v.storage,
-            stock: v.stock,
-            purchasePrice: v.purchasePrice,
-          })),
-        },
+        userId,
       },
       include: {
-        variants: {
-          include: {
-            color: true,
-          },
-        },
+        variants: true,
         category: true,
       },
     });
+  
+    if (updateProductDto.variants) {
+      for (const updatedVariant of updateProductDto.variants) {
+        const existingVariant = await this.prisma.variant.findUnique({
+          where: { id: updatedVariant.id },
+        });
+  
+        if (existingVariant) {
+          await this.prisma.variant.update({
+            where: { id: updatedVariant.id },
+            data: {
+              colorId: updatedVariant.colorId,
+              storage: updatedVariant.storage,
+              stock: updatedVariant.stock,
+              purchasePrice: updatedVariant.purchasePrice,
+            },
+          });
+        } else {
+          await this.prisma.variant.create({
+            data: {
+              productId: id,
+              colorId: updatedVariant.colorId,
+              storage: updatedVariant.storage,
+              stock: updatedVariant.stock,
+              purchasePrice: updatedVariant.purchasePrice,
+            },
+          });
+        }
+      }
+  
+      const updatedVariantIds = updateProductDto.variants.map(v => v.id);
+      await this.prisma.variant.deleteMany({
+        where: {
+          productId: id,
+          NOT: {
+            id: { in: updatedVariantIds },
+          },
+        },
+      });
+    }
+  
+    return updatedProduct;
   }
   
-  
-
   async remove(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },

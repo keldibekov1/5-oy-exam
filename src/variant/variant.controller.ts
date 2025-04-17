@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { VariantService } from './variant.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
