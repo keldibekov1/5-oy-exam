@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  OMBOR_ADMIN
+  KASSIR
+  AUDITOR
+}
+
+enum ProductCondition {
+  NEW
+  GOOD
+  AVERAGE
+  BROKEN
+}
+
+enum TransactionType {
+  SALE
+  PURCHASE
+  RETURN
+  EXCHANGE
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String?
+  firstname    String?
+  lastname     String?
+  img          String?
+  otp          String?
+  verified     Boolean       @default(false)
+  role         Role
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  products     Product[]
+  transactions Transaction[]
+  logs         Log[]
+  exchanges    Exchange[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Color {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  variants  Variant[]
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  name         String
+  model        String
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id])
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  variants     Variant[]
+  images       String[]
+  supplier     String?
+  stock        Int
+  oldExchanges Exchange[]    @relation("OldProductExchange")
+  newExchanges Exchange[]    @relation("NewProductExchange")
+}
+
+model Variant {
+  id            String        @id @default(uuid())
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+  colorId       String
+  color         Color         @relation(fields: [colorId], references: [id])
+  storage       String
+  stock         Int
+  purchasePrice Float
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  exchanges     Exchange[] // Exchange bilan aloqasi
+}
+
+// model Product {
+//   id            String        @id @default(uuid())
+//   name          String
+//   model         String
+//   categoryId    String
+//   category      Category      @relation(fields: [categoryId], references: [id])
+//   userId        String
+//   user          User          @relation(fields: [userId], references: [id])
+//   createdAt     DateTime      @default(now())
+//   updatedAt     DateTime      @updatedAt
+//   transactions  Transaction[]
+//   exchanges     Exchange[]    @relation("ProductExchanges")
+//   variants      Variant[]
+//   images        String[]
+//   supplier      String?
+//   stock         Int
+//   purchasePrice Float         // Productga purchasePrice qo'shildi
+// }
+
+// model Variant {
+//   id            String        @id @default(uuid())
+//   productId     String
+//   product       Product       @relation(fields: [productId], references: [id])
+//   colorId       String
+//   color         Color         @relation(fields: [colorId], references: [id])
+//   storage       String
+//   stock         Int
+//   createdAt     DateTime      @default(now())
+//   updatedAt     DateTime      @updatedAt
+//   // purchasePrice endi Variant modelidan olib tashlandi
+// }
+
+model Region {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  customers Customer[]
+}
+
+model Customer {
+  id           String        @id @default(uuid())
+  firstName    String
+  lastName     String
+  phoneNumber  String        @unique
+  regionId     String
+  region       Region        @relation(fields: [regionId], references: [id])
+  totalSpent   Float         @default(0)
+  lastPurchase DateTime?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  exchanges    Exchange[]
+}
+
+// model Transaction {
+//   id            String           @id @default(uuid())
+//   type          TransactionType 
+//   date          DateTime         @default(now())
+//   amount        Float           
+//   profit        Float            
+//   productId     String
+//   product       Product           @relation(fields: [productId], references: [id])
+//   variantId     String           
+//   variant       Variant           @relation(fields: [variantId], references: [id]) 
+//   customerId    String
+//   customer      Customer          @relation(fields: [customerId], references: [id])
+//   adminId       String
+//   admin         User              @relation(fields: [adminId], references: [id])
+//   returns       Return[]         
+//   exchanges     Exchange[]        
+// }
+
+model Transaction {
+  id         String          @id @default(uuid())
+  type       TransactionType
+  date       DateTime        @default(now())
+  amount     Float
+  unitPrice  Float
+  quantity   Int
+  profit     Float
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id])
+  variantId  String
+  variant    Variant         @relation(fields: [variantId], references: [id])
+  customerId String
+  customer   Customer        @relation(fields: [customerId], references: [id])
+  adminId    String
+  admin      User            @relation(fields: [adminId], references: [id])
+  returns    Return[]
+}
+
+model Return {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  reason        String
+  quantity      Int
+  amount        Float
+  date          DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// model Exchange {
+//   id             String        @id @default(uuid())
+//   oldProductId   String
+//   newProductId   String
+//   oldCondition   ProductCondition
+//   newCondition   ProductCondition
+//   oldPrice       Float
+//   newPrice       Float
+//   customerId     String
+//   customer       Customer   @relation(fields: [customerId], references: [id])
+//   adminId        String
+//   admin          User       @relation(fields: [adminId], references: [id])
+//   transactionId  String
+//   transaction    Transaction @relation(fields: [transactionId], references: [id])
+//   exchangeDate   DateTime   @default(now())
+//   exchanges      Product[]  @relation("ProductExchanges") 
+// }
+
+model Exchange {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation("NewProductExchange", fields: [productId], references: [id])
+
+  variantId String
+  variant   Variant @relation(fields: [variantId], references: [id])
+
+  unitPrice  Int 
+  oldPrice   Int 
+  difference Int 
+
+  oldProductId String
+  oldProduct   Product @relation("OldProductExchange", fields: [oldProductId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id])
+
+  description String? 
+
+  createdAt DateTime @default(now())
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  action    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
