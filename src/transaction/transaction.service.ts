@@ -8,10 +8,10 @@ import * as TelegramBot from 'node-telegram-bot-api';
 @Injectable()
 export class TransactionService {
   private bot: TelegramBot;
-  private readonly chatId = '-1002661533599'; // Kanal username yoki -1001234567890
+  private readonly chatId = '-1002661533599'; 
 
   constructor(private prisma: PrismaService) {
-    this.bot = new TelegramBot('7897153787:AAEqWoQCiP7z-koNuK7QOSIqNh7caZAXV_w', { polling: false }); // o'z tokeningizni qo‘ying
+    this.bot = new TelegramBot('7897153787:AAEqWoQCiP7z-koNuK7QOSIqNh7caZAXV_w', { polling: false }); 
   }
 
   async create(dto: CreateTransactionDto, adminId: string) {
@@ -49,7 +49,6 @@ export class TransactionService {
       },
     });
 
-    // Mijozga sarf qo‘shiladi
     if (dto.type === TransactionType.SALE) {
       await this.prisma.customer.update({
         where: { id: dto.customerId },
@@ -60,7 +59,6 @@ export class TransactionService {
       });
     }
 
-    // Telegramga yuboramiz
     await this.sendTransactionToTelegram(transaction.id);
 
     return transaction;
