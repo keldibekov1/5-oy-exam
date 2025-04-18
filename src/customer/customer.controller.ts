@@ -3,6 +3,8 @@ import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Res } from '@nestjs/common';
+import { Response } from 'express'; 
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -51,4 +53,12 @@ async findAll(
   async remove(@Param('id') id: string) {
     return this.customerService.remove(id);
   }
+
+  @ApiOperation({ summary: 'Export all customers to Excel' })
+  @ApiResponse({ status: 200, description: 'Returns Excel file of all customers' })
+  @Get('export/excel')
+  async exportExcel(@Res() res: Response) {
+    return this.customerService.exportToExcel(res);
+  }
+
 }
