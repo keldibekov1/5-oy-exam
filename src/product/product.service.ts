@@ -132,41 +132,51 @@ export class ProductService {
         userId,
       },
       include: {
-        variants: true,
+        variants: {
+          include: { color: true },
+        },
         category: true,
       },
     });
   
-    if (updateProductDto.variants) {
-      for (const updatedVariant of updateProductDto.variants) {
-        const existingVariant = await this.prisma.variant.findUnique({
-          where: { id: updatedVariant.id },
+    if (updateProductDto.variants && updateProductDto.variants.length > 0) {
+      const updatedVariantIds: string[] = [];
+  
+      for (const variant of updateProductDto.variants) {
+        if (variant.id) {
+          const existingVariant = await this.prisma.variant.findUnique({
+            where: { id: variant.id },
+          });
+  
+          if (existingVariant) {
+            await this.prisma.variant.update({
+              where: { id: variant.id },
+              data: {
+                colorId: variant.colorId,
+                storage: variant.storage,
+                stock: variant.stock,
+                purchasePrice: variant.purchasePrice,
+              },
+            });
+            updatedVariantIds.push(variant.id);
+            continue;
+          }
+        }
+  
+        const newVariant = await this.prisma.variant.create({
+          data: {
+            productId: id,
+            colorId: variant.colorId,
+            storage: variant.storage,
+            stock: variant.stock,
+            purchasePrice: variant.purchasePrice,
+          },
         });
   
-        if (existingVariant) {
-          await this.prisma.variant.update({
-            where: { id: updatedVariant.id },
-            data: {
-              colorId: updatedVariant.colorId,
-              storage: updatedVariant.storage,
-              stock: updatedVariant.stock,
-              purchasePrice: updatedVariant.purchasePrice,
-            },
-          });
-        } else {
-          await this.prisma.variant.create({
-            data: {
-              productId: id,
-              colorId: updatedVariant.colorId,
-              storage: updatedVariant.storage,
-              stock: updatedVariant.stock,
-              purchasePrice: updatedVariant.purchasePrice,
-            },
-          });
-        }
+        updatedVariantIds.push(newVariant.id);
       }
   
-      const updatedVariantIds = updateProductDto.variants.map(v => v.id);
+      // Eski qolgan variantlarni o‘chiramiz
       await this.prisma.variant.deleteMany({
         where: {
           productId: id,
@@ -179,6 +189,7 @@ export class ProductService {
   
     return updatedProduct;
   }
+  
   
   async remove(id: string) {
     const product = await this.prisma.product.findUnique({
