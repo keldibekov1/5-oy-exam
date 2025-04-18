@@ -1,10 +1,12 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Patch } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Patch, Req, Delete, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, VerifyOtpDto } from './dto/auth-dto';
+import { LoginDto, RegisterDto, ResetPasswordDto, VerifyOtpDto } from './dto/auth-dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { JwtAuthGuard } from 'src/jwt-auth-guard/jwt-auth-guard.guard';
 import { UpdateProfileDto } from './dto/update-auth.dto';
+import { Request as ExpressRequest } from 'express';
+
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -39,9 +41,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Foydalanuvchini tizimga kirishi' })
   @ApiResponse({ status: 200, description: 'Muvaffaqiyatli login' })
   @ApiResponse({ status: 401, description: 'Email yoki parol notogri' })
-  async login(@Body() data: LoginDto) {
-    return this.authService.login(data);
+  login(@Body() data: LoginDto, @Req() req: ExpressRequest) {
+    return this.authService.login(data, req);
   }
+
 
   @UseGuards(JwtAuthGuard)
   @Get('/me')
@@ -57,4 +60,43 @@ export class AuthController {
   async updateProfile(@Request() req, @Body() data: UpdateProfileDto) {
     return this.authService.updateProfile(req.user.id, data);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('sessions')
+  @ApiOperation({ summary: 'User sessiyalarini korish' })
+  async getSessions(@Request() req) {
+    return this.authService.getSessions(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('mysessions')
+  @ApiOperation({ summary: 'User sessiyalarini korish' })
+  async getMySessions(@Request() req) {
+    return this.authService.getMySessions(req.user.id);
+  }
+ 
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('mysessions/:id')
+  @ApiOperation({ summary: 'User sessiyalarini o\'chirish' })
+  @ApiResponse({ status: 200, description: 'Sessiya o\'chirildi' })
+  @ApiResponse({ status: 404, description: 'Sessiya topilmadi' })
+  async deleteMySessions(@Request() req, @Param('id') sessionId: string) {
+    const userId = req.user.id;
+
+    return this.authService.deleteMySession( sessionId);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Post('reset-password')
+  @ApiOperation({ summary: 'JWT orqali parolni yangilash' })
+  async resetPassword(
+    @Req() req,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    const userId = req.user.id;
+    return this.authService.resetPassword(userId, dto);
+  }
+  
 }

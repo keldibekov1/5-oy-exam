@@ -44,6 +44,8 @@ model User {
   transactions Transaction[]
   logs         Log[]
   exchanges    Exchange[]
+  sessions    Session[]
+
 }
 
 model Category {
@@ -252,4 +254,21 @@ model Log {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+
+model Session {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  userAgent      String   // Qurilma haqida info (browser, os)
+  ip             String   // IP manzil
+  device         String?  // Telefon/Kompyuter model nomi (masalan: Galaxy S21 Ultra)
+  location       String?  // IP orqali aniqlangan joylashuv (shahar, davlat)
+  os             String?  // Operatsion tizim (masalan: Android, Windows)
+  browser        String?  // Brauzer nomi va versiyasi
+  isMobile       Boolean? // Qurilma turi - telefon yoki kompyuter
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

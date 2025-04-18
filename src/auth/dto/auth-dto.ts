@@ -56,3 +56,22 @@ export class VerifyOtpDto {
   @IsNotEmpty()
   otp: string;
 }
+
+
+export class ResetPasswordDto {
+  @ApiProperty({
+    example: 'yangi123',
+    description: 'Yangi parol (kamida 6ta belgidan iborat bo‘lishi kerak)',
+  })
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+
+  @ApiProperty({
+    example: 'yangi123',
+    description: 'Tasdiqlovchi parol (yangi parol bilan bir xil bo‘lishi kerak)',
+  })
+  @IsString()
+  @MinLength(6)
+  confirmPassword: string;
+}
