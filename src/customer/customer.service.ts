@@ -32,19 +32,45 @@ export class CustomerService {
   
   
 
-  async findAll(page: number, limit: number, phoneNumber?: string) {
+  async findAll(
+    page: number, 
+    limit: number, 
+    searchTerm?: string // search term qo‘shildi
+  ) {
     const skip = (page - 1) * limit;
   
-    const where: Prisma.CustomerWhereInput = phoneNumber
-      ? { phoneNumber: { contains: phoneNumber, mode: Prisma.QueryMode.insensitive } } 
-      : {}; 
+    // Qidirish shartlari
+    const where: Prisma.CustomerWhereInput = searchTerm
+      ? {
+          OR: [
+            {
+              firstName: {
+                contains: searchTerm,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+            {
+              lastName: {
+                contains: searchTerm,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+            {
+              phoneNumber: {
+                contains: searchTerm,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }
+      : {};
   
     const customers = await this.prisma.customer.findMany({
       where,
       skip,
       take: limit,
       include: {
-        region: true, 
+        region: true,
       },
     });
   
@@ -53,15 +79,16 @@ export class CustomerService {
     });
   
     return {
-      data: customers.map(customer => ({
+      data: customers.map((customer) => ({
         ...customer,
-        regionName: customer.region?.name, 
+        regionName: customer.region?.name,
       })),
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalCustomers: total,
     };
   }
+  
   
   
   

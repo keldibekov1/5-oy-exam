@@ -18,19 +18,20 @@ export class CustomerController {
     return this.customerService.create(createCustomerDto);
   }
 
-@ApiOperation({ summary: 'Get all customers' })
-@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
-@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Page size' })
-@ApiQuery({ name: 'phoneNumber', required: false, type: String, description: 'Phone number to search' })
-@ApiResponse({ status: 200, description: 'Returns a list of customers' })
-@Get()
-async findAll(
-  @Query('page') page = 1, 
-  @Query('limit') limit = 10, 
-  @Query('phoneNumber') phoneNumber?: string
-) {
-  return this.customerService.findAll(page, limit, phoneNumber);
-}
+  @ApiOperation({ summary: 'Get all customers' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Page size' })
+  @ApiQuery({ name: 'searchTerm', required: false, type: String, description: 'Search term for first name, last name or phone number' })
+  @ApiResponse({ status: 200, description: 'Returns a list of customers' })
+  @Get()
+  async findAll(
+    @Query('page') page = 1, 
+    @Query('limit') limit = 10, 
+    @Query('searchTerm') searchTerm?: string
+  ) {
+    return this.customerService.findAll(page, limit, searchTerm);
+  }
+  
 
 
   @ApiOperation({ summary: 'Get a customer by id' })
